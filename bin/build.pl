@@ -64,3 +64,5 @@ foreach my $resolution (@RESOLUTIONS) {
 }
 
 say "Done!" if $DEBUG;
+
+exit 0;
