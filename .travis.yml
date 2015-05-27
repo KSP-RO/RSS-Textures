@@ -1,6 +1,6 @@
 language: c
 install:
-    - sudo apt-get install libfile-copy-recursive-perl libarchive-zip-perl
+    - sudo apt-get install libfile-copy-recursive-perl libarchive-zip-perl libipc-system-simple-perl
 script: bin/build.pl
 deploy:
   provider: releases
