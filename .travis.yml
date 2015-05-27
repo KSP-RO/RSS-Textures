@@ -1,0 +1,17 @@
+language: c
+install:
+    - sudo apt-get install libfile-copy-recursive-perl libarchive-zip-perl
+script: bin/build.pl
+deploy:
+  provider: releases
+  skip_cleanup: true
+  api_key:
+    secure: UQfB5f6NOWZtIYBDLlOkPlfVK1NSGmwN6UzCRDNd/tMdEIBBzZRL8GOl5b38Q0ScqJKvRW1MMwk/ZlGv6JvibJ3phj6rH38rqJTk71fPjzds5XRxkLhy/SgPc407FmohyGSgqUZBN83INAyhmOw1BBz3J75zA5DjZCD5z8Y8w92IkPL/tH9InNgVxED2rRrcSrw22RTxx6YIGLy1f6NkEJ2ipMz6FOHBgNObARyLyRwFFERoe1UZZzquOB6EoFLu+fYdnsKa2hiznNYKJhqDxDDGjGcEKln/HAX0wPvFSHuRNAr630GWlGhH6Uiqg6sNDOVGVN3Fq0O8EMJzZXzXETocnDyXjwpZ0DfqpQB6jlhM2K8/uDLxOpyyLonJTkOrZvdTPANZm2IgmJIW6PIR6A5qTcMbLPLEJebXey/bGhgq3P3y4wpDCt0q2tvaHkShNmfPCK/Xi4wFQfoCFzEmTV9R34LKKZNjW0u34YJyymoFXECY/IcF3j4MmdWf6VGa+iJsJCFdzdXFOauiCequuvHsdyuHTF8O1LPKZjounLlwmKxgbA9brjsina+rQGLbODmtiFwelfKvsfAHBQq89UwvwBOTiNv+lV7eYq6kBcAcUJW3DxowSeLZKIP48ME2sqaNFfApg8Qm4RcJotSSpqNyW9pQVYyFsSj4kHI6EpA=
+  file:
+    - 2048.zip
+    - 4096.zip
+    - 8192.zip
+  on:
+    repo: KSP-RO/RSS-Textures
+    tags: true
+    all_branches: true
