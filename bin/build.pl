@@ -39,7 +39,7 @@ foreach my $resolution (@RESOLUTIONS) {
     say "Copying $resolution textures" if $DEBUG;
     dircopy($resolution, $TEXTURE_DIR);
 
-    say "Buidling $resolution.zip" if $DEBUG;
+    say "Building $resolution.zip" if $DEBUG;
     my $zip = Archive::Zip->new;
 
     my @files;
