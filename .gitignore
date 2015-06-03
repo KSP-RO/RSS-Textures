@@ -1,2 +1,7 @@
 # Ignore Mac files
 *.DS_Store
+# Ignore releases
+2048.zip
+4096.zip
+8192.zip
+GameData
