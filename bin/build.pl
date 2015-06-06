@@ -26,12 +26,12 @@ chdir "$Bin/.." ;
 -f $BUILD_DIR and die "$BUILD_DIR already exists, please (re)move it before running.\n";
 
 
+make_path $BIOMES_DIR;
+
 #copy readme
 foreach my $textfile (glob("*.txt")) {
     copy($textfile, $TEXTURE_DIR);
 }
-
-make_path $BIOMES_DIR;
 
 # Copy Biomes
 
