@@ -15,7 +15,7 @@ use autodie qw(:all dircopy copy);
 # License: MIT
 
 my @RESOLUTIONS     = qw(2048 4096 8192);
-my $BIOMES_PATTERN  = "Biomes/*.png";
+my $BIOMES_PATTERN  = "Biomes/*.*";
 my $BUILD_DIR       = "GameData";
 my $BIOMES_DIR      = "$BUILD_DIR/RSS-Textures/PluginData";
 my $TEXTURE_DIR     = "$BUILD_DIR/RSS-Textures";
@@ -24,6 +24,12 @@ my $DEBUG           = 1;
 chdir "$Bin/.." ;
 
 -f $BUILD_DIR and die "$BUILD_DIR already exists, please (re)move it before running.\n";
+
+
+#copy readme
+foreach my $textfile (glob("*.txt")) {
+    copy($textfile, $TEXTURE_DIR);
+}
 
 make_path $BIOMES_DIR;
 
