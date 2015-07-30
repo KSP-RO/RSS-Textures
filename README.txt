@@ -14,7 +14,7 @@ License: CC-BY-NC-SA
 
 Some planetary imagery is derived from work by Steve Albers and NASA / Jet Propulsion Laboratory, and some from the Celestia Motherlode (itself in the main sourced from JPL). Used by permission of the licenses for non-commercial release.
 
-v10.1
+v10.2 for RSS 10.2
 * Includes updated Earth biome map from KellanHiggins.
 
 v10.0 Initial version
