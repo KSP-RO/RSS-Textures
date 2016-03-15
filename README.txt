@@ -14,6 +14,9 @@ License: CC-BY-NC-SA
 
 Some planetary imagery is derived from work by Steve Albers and NASA / Jet Propulsion Laboratory, and some from the Celestia Motherlode (itself in the main sourced from JPL). Used by permission of the licenses for non-commercial release.
 
+v10.4 for RSS 10.6
+* Added new-Pluto and Charon biomes
+
 v10.3 for RSS 10.6
 * Higher fidelity normal, color maps for many bodies (hand-tweaked as necessary).
 * Downsized heightmaps for bodies where existing maps caused "step" / pixelation issues.
