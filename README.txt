@@ -14,6 +14,18 @@ License: CC-BY-NC-SA
 
 Some planetary imagery is derived from work by Steve Albers and NASA / Jet Propulsion Laboratory, and some from the Celestia Motherlode (itself in the main sourced from JPL). Used by permission of the licenses for non-commercial release.
 
+v13.0 for RSS 13.0
+* update all repositories to use Pap's Scaled RSS Textures which are made to take advantage new kopernicus versions
+* allows unloaded textures to use "on demand" loading of non-Home bodies. Memory demand should be reduced significantly.
+* See https://github.com/pap1723/ScaledRSS-Textures for previous work including :>
+   * Updated Moon Biomes map for use with the modified biomes config
+   * New, higher quality Mars Map
+   * Fixed Oberon Biomes to match on edges
+   * Updated the Earth Biome Map to remove the Chapparal biome
+* Major changes to biomes on earth and moon, simplification and clean up of all other bodies.
+* Bodies have updated textures with improved mipmaps and normals.
+
+
 v10.4 for RSS 10.6
 * Added new-Pluto and Charon biomes
 
