@@ -14,6 +14,9 @@ License: CC-BY-NC-SA
 
 Some planetary imagery is derived from work by Steve Albers and NASA / Jet Propulsion Laboratory, and some from the Celestia Motherlode (itself in the main sourced from JPL). Used by permission of the licenses for non-commercial release.
 
+v18.0 for RSS 18.0
+* Convert all png textures to DXT5
+
 v13.1 for RSS 13.1
 * Fix the orientation of Saturn's rings
 * Fix normal maps for Vesta and Ceres
