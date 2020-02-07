@@ -1,4 +1,4 @@
-Real Solar System Texture pack (DDS Edition) for KSP 1.3.1+ (RSS-Kopernicus)
+Real Solar System Texture pack (DDS Edition) for KSP 1.8.0+ (RSS-Kopernicus)
 NathanKell
 GitHub: https://github.com/KSP-RO/RSS-Textures
 
