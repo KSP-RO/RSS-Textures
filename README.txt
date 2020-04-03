@@ -14,6 +14,10 @@ License: CC-BY-NC-SA
 
 Some planetary imagery is derived from work by Steve Albers and NASA / Jet Propulsion Laboratory, and some from the Celestia Motherlode (itself in the main sourced from JPL). Used by permission of the licenses for non-commercial release.
 
+v18.1 for RSS 18.0
+* Reconvert textures to fix a multitude of issues
+* Fix some biome maps being inverted
+
 v18.0 for RSS 18.0
 * Convert all png textures to DXT5
 
