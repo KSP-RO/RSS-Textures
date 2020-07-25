@@ -4,6 +4,8 @@ GitHub: https://github.com/KSP-RO/RSS-Textures
 
 This is a texture pack for Real Solar System, which will convert the Kerbol System into the Solar System, rescaling, moving, and changing KSP's planets, moons, etc. to match our own.
 
+Large textures in the 16k pack, and EarthHeight.dds in the 8k pack are not stored in GitHub due to size issues, these can be obtained from the latest release.
+
 Installation:
 Unzip the RSS-Textures folder in the GameData folder in the archive to your KSP GameData folder, so you'll have KSP/GameData/RSS-Textures (and inside that lots of dds files). You can then manually replace some of the textures with different-resolution textures from the repository if you so choose.
 
