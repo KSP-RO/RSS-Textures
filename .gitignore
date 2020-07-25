@@ -6,5 +6,12 @@
 8192.zip
 GameData
 /2048/PluginData/nvdxt_scratch.tmp
+# Ignore VS temps
 /_ReSharper.Caches/ReSharperPlatformVs16191_4011600b.00
 /.vs
+tools/TopoConv/.vs
+tools/TopoConv/x64
+*.user
+*.iobj
+*.ipdb
+*.pdb
