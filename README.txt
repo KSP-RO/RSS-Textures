@@ -16,6 +16,13 @@ License: CC-BY-NC-SA
 
 Some planetary imagery is derived from work by Steve Albers and NASA / Jet Propulsion Laboratory, and some from the Celestia Motherlode (itself in the main sourced from JPL). Used by permission of the licenses for non-commercial release.
 
+v18.3 for RSS v18.1.3
+* Fix color textures for the Moon
+* Add 16 bit heightmaps for Earth, the Moon, and Mars
+* Add 16k texture pack based on @Vannadin's work
+* Ensure that the file extension for all dds files are in lowercase
+* New Uranus moon textures
+
 v18.1 for RSS 18.0
 * Reconvert textures to fix a multitude of issues
 * Fix some biome maps being inverted
