@@ -81,39 +81,46 @@ bool ReadTiff(TiffFile_t& tiffFile, const char* filename)
 
 			const auto& readstrips = [fp, filename, bigendian, convertU16, convertU32](uint32_t*& strips, uint16_t type, uint32_t count, uint32_t offset) -> bool {
 				strips = new uint32_t[count];
-				int64_t offs = _ftelli64(fp);
-				_fseeki64(fp, offset, SEEK_SET);
-				if (type == 3)
+				if (count == 1)
 				{
-					uint16_t* strip16 = reinterpret_cast<uint16_t*>(strips + count / 2);
-					if (fread(strip16, 2, count, fp) != count)
-					{
-						printf("Could not read %s: Read error\n", filename);
-						return false;
-					}
-					for (uint32_t i = 0; i < count; ++i)
-						strips[i] = convertU16(strip16[i]);
-
-				}
-				else if (type == 4)
-				{
-					if (fread(strips, 4, count, fp) != count)
-					{
-						printf("Could not read %s: Read error\n", filename);
-						return false;
-					}
-					if (bigendian)
-					{
-						for (uint32_t i = 0; i < count; ++i)
-							strips[i] = convertU32(strips[i]);
-					}
+					strips[0] = offset;
 				}
 				else
 				{
-					printf("Could not read %s: Invalid file\n", filename);
-					return false;
+					int64_t offs = _ftelli64(fp);
+					_fseeki64(fp, offset, SEEK_SET);
+					if (type == 3)
+					{
+						uint16_t* strip16 = reinterpret_cast<uint16_t*>(strips + count / 2);
+						if (fread(strip16, 2, count, fp) != count)
+						{
+							printf("Could not read %s: Read error\n", filename);
+							return false;
+						}
+						for (uint32_t i = 0; i < count; ++i)
+							strips[i] = convertU16(strip16[i]);
+
+					}
+					else if (type == 4)
+					{
+						if (fread(strips, 4, count, fp) != count)
+						{
+							printf("Could not read %s: Read error\n", filename);
+							return false;
+						}
+						if (bigendian)
+						{
+							for (uint32_t i = 0; i < count; ++i)
+								strips[i] = convertU32(strips[i]);
+						}
+					}
+					else
+					{
+						printf("Could not read %s: Invalid file\n", filename);
+						return false;
+					}
+					_fseeki64(fp, offs, SEEK_SET);
 				}
-				_fseeki64(fp, offs, SEEK_SET);
 				return true;
 			};
 
@@ -162,6 +169,8 @@ bool ReadTiff(TiffFile_t& tiffFile, const char* filename)
 			case 339:
 				sampleformat = offset;
 				break;
+			//default:
+				//printf("Ignored tag: %d\n", tag);
 			}
 		}
 

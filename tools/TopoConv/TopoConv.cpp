@@ -204,6 +204,7 @@ int main(int argc, const char** argv)
 
     StringParams_t strParams({
         { "f", StringParams_t::mapped_type("Output data format", "r16") },
+        { "landtex", StringParams_t::mapped_type("Texture for land masking (tiff format)") },
         });
 
     if (argc < 2)
@@ -253,6 +254,20 @@ int main(int argc, const char** argv)
         }
     }
 
+    TiffFile_t landTex = {};
+    if (strParams["landtex"])
+    {
+        if (!ReadTiff(landTex, strParams["landtex"]))
+        {
+            printf("Cannot read land texture: %s\n", static_cast<const char*>(strParams["landtex"]));
+            return 1;
+        }
+        if (landTex.pixels)
+        {
+            printf("Using land texture: %s\n", static_cast<const char*>(strParams["landtex"]));
+        }
+    }
+
     float* srcdata;
     int32_t src_width, src_height;
     int64_t pixels;
@@ -274,7 +289,7 @@ int main(int argc, const char** argv)
 		FILE* fp = nullptr;
 		if (fopen_s(&fp, infilename, "rb") != 0)
 		{
-			printf("Unable to open %s", infilename);
+			printf("Unable to open %s\n", infilename);
 			return 1;
 		}
 
@@ -404,6 +419,7 @@ int main(int argc, const char** argv)
 
     double latScale = double(src_height) / double(dst_height + 1);
     double lngScale = double(src_width) / double(dst_width);
+    double landScale = double(landTex.width) / double(src_width);
 
     double coast = floatParams["coastdefine"] * heightscale;
     auto coastdefine = [coast](double h) -> double
@@ -411,6 +427,17 @@ int main(int argc, const char** argv)
         if (fabs(h) < coast)
             return signbit(h) ? -coast : coast;
         return h;
+    };
+
+    auto sampleland = [landScale, landTex](int32_t lat, int32_t lng) -> float
+    {
+        if (landTex.pixels)
+            return 1.0f - landTex.pixels[int32_t(lat * landScale + 0.5f) * landTex.width + int32_t(lng * landScale + 0.5f)] / 255.0f;
+        return 0.0;
+    };
+    auto landdefine = [coast](double h, double landdef) -> double
+    {
+        return h + landdef * max(coast - h, 0.0);
     };
 
     if (boolParams["nearest"])
@@ -426,7 +453,9 @@ int main(int argc, const char** argv)
                 lng = wrap(lng, src_width);
 
                 double h = srcdata[lat * src_width + lng];
-                h = coastdefine(heightscale * h) + heightoffs;
+                double landdef = sampleland(lat, lng);
+
+                h = coastdefine(landdefine(heightscale * h, landdef)) + heightoffs;
 
                 dstdata[y * dst_width + x] = clamp(int32_t(h + 0.5), 0, (int32_t)UINT16_MAX);
             }
@@ -458,7 +487,13 @@ int main(int argc, const char** argv)
                 h += srcdata[minLat * src_width + maxLong] * (1.0 - fLat) * fLong;
                 h += srcdata[maxLat * src_width + maxLong] * fLat * fLong;
 
-                h = coastdefine(heightscale * h) + heightoffs;
+                double landdef;
+                landdef  = sampleland(minLat, minLong) * (1.0 - fLat) * (1.0 - fLong);
+                landdef += sampleland(maxLat, minLong) * fLat * (1.0 - fLong);
+                landdef += sampleland(minLat, maxLong) * (1.0 - fLat) * fLong;
+                landdef += sampleland(maxLat, maxLong) * fLat * fLong;
+
+                h = coastdefine(landdefine(heightscale * h, landdef)) + heightoffs;
 
                 dstdata[y * dst_width + x] = clamp(int32_t(h + 0.5), 0, (int32_t)UINT16_MAX);
             }
@@ -473,6 +508,7 @@ int main(int argc, const char** argv)
         {
             size_t maxN = int32_t(ceil(latScale) * ceil(lngScale));
             float* hBuf = static_cast<float*>(alloca(maxN * sizeof(float)));
+            float* landBuf = static_cast<float*>(alloca(maxN * sizeof(float)));
 
             int32_t minLat = int32_t(y * latScale + 0.5);
             int32_t maxLat = int32_t((y + 1) * latScale + 0.5);
@@ -489,7 +525,9 @@ int main(int argc, const char** argv)
                 {
                     for (int32_t lng = minLong; lng < maxLong; ++lng)
                     {
-                        hBuf[n++] = srcdata[lat * src_width + wrap(lng, src_width)];
+                        hBuf[n] = srcdata[lat * src_width + wrap(lng, src_width)];
+                        landBuf[n] = sampleland(lat, wrap(lng, src_width));
+                        ++n;
                     }
                 }
 
@@ -512,7 +550,9 @@ int main(int argc, const char** argv)
                     h = std::accumulate(hBuf, hBuf + n, 0.0) / n;
                 }
 
-                h = coastdefine(heightscale * h) + heightoffs;
+                double landdef = std::accumulate(landBuf, landBuf + n, 0.0) / n;
+
+                h = coastdefine(landdefine(heightscale * h, landdef)) + heightoffs;
                 dstdata[y * dst_width + x] = clamp(int32_t(h + 0.5), 0, (int32_t)UINT16_MAX);
             }
         }
@@ -702,13 +742,13 @@ int main(int argc, const char** argv)
             }
         }
 
+        FILE* fp;
         if (fopen_s(&fp, "sobel_test.dds", "wb") != 0)
         {
             printf("Unable to open %s", outfilename);
             return 1;
         }
 
-        FILE* fp;
         uint32_t magic = 0x20534444;
         fwrite(&magic, 4, 1, fp);
         fwrite(&desc, sizeof(desc), 1, fp);
