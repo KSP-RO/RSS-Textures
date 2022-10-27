@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <numeric>
 #include <map>
+#include <functional>
 
 #include "ReadTiff.h"
 
@@ -30,7 +31,7 @@ typedef struct {
     DWORD           dwReserved2;
 } DDS_HEADER;
 
-
+constexpr uint32_t DDSMagic = 0x20534444;
 
 template<typename T>
 inline T clamp(T value, T minval, T maxval)
@@ -140,6 +141,152 @@ bool ParseStringParam(StringParams_t& strParams, const char* argName, const char
     return false;
 }
 
+int FixPoles(const char* infilename)
+{
+	DDS_HEADER desc;
+	memset(&desc, 0, sizeof(desc));
+
+	FILE* fp;
+	if (fopen_s(&fp, infilename, "rb") != 0)
+	{
+		printf("Unable to open %s", infilename);
+		return 1;
+	}
+
+	uint32_t magic;
+	fread(&magic, 4, 1, fp);
+    if (magic != DDSMagic)
+    {
+        printf("Invalid DDS file\n");
+        return 1;
+    }
+
+    fread(&desc, sizeof(desc), 1, fp);
+
+    if ((desc.dwFlags & (DDSD_WIDTH | DDSD_HEIGHT | DDSD_PIXELFORMAT)) != (DDSD_WIDTH | DDSD_HEIGHT | DDSD_PIXELFORMAT))
+    {
+		printf("Invalid DDS file flags\n");
+		return 1;
+    }
+
+    uint32_t bitdepth = 0;
+
+    if (desc.ddspf.dwFlags & DDPF_LUMINANCE)
+    {
+        if (desc.ddspf.dwRGBBitCount == 16)
+            bitdepth = 16;
+        else if (desc.ddspf.dwRGBBitCount == 8)
+			bitdepth = 8;
+    }
+
+    if (bitdepth == 0)
+	{
+		printf("Invalid texture format\n");
+		return 1;
+    }
+
+    uint32_t pitch = 0;
+    if (desc.dwFlags & DDSD_PITCH)
+    {
+        pitch = desc.dwPitchOrLinearSize;
+    }
+    else if (desc.dwFlags & DDSD_LINEARSIZE)
+    {
+		pitch = desc.dwPitchOrLinearSize / desc.dwHeight;
+    }
+    else
+    {
+		printf("Invalid DDS file flags\n");
+		return 1;
+    }
+
+	printf("Reading DDS: %ux%u %u bpp\n", desc.dwWidth, desc.dwHeight, bitdepth);
+
+    uint8_t* data = new uint8_t[pitch * desc.dwHeight];
+
+    fseek(fp, desc.dwSize + sizeof(uint32_t), SEEK_SET);
+    fread(data, pitch, desc.dwHeight, fp);
+
+    fclose(fp);
+
+    struct rowstats_t
+    {
+        uint64_t total = 0;
+        uint32_t minval = ~0u;
+        uint32_t maxval = 0;
+    };
+
+    std::function<void(const uint8_t*, uint32_t, rowstats_t&)> sum_row;
+    std::function<void(uint8_t*, uint32_t, uint32_t)> set_row;
+
+    if (bitdepth == 16)
+    {
+        sum_row = [](const uint8_t* data, uint32_t width, rowstats_t& rowstats)
+        {
+            const uint16_t* data16 = (uint16_t*)data;
+            for (uint32_t i = 0; i < width; ++i)
+            {
+                uint16_t value = *data16++;
+                rowstats.total += value;
+                rowstats.minval = min(value, rowstats.minval);
+                rowstats.maxval = max(value, rowstats.maxval);
+            }
+        };
+        set_row = [](uint8_t* data, uint32_t width, uint32_t value)
+        {
+			uint16_t* data16 = (uint16_t*)data;
+			for (uint32_t i = 0; i < width; ++i)
+			{
+                *data16++ = value;
+			}
+        };
+    }
+    else
+    {
+        sum_row = [](const uint8_t* data, uint32_t width, rowstats_t& rowstats)
+        {
+            for (uint32_t i = 0; i < width; ++i)
+            {
+                uint8_t value = *data++;
+                rowstats.total += value;
+                rowstats.minval = min(value, rowstats.minval);
+                rowstats.maxval = max(value, rowstats.maxval);
+            }
+		};
+		set_row = [](uint8_t* data, uint32_t width, uint32_t value)
+		{
+			for (uint32_t i = 0; i < width; ++i)
+			{
+				*data++ = value;
+			}
+		};
+    }
+
+    rowstats_t toprow;
+    rowstats_t bottomrow;
+    sum_row(data, desc.dwWidth, toprow);
+    sum_row(data + pitch * (desc.dwHeight - 1), desc.dwWidth, bottomrow);
+
+	printf("  North Pole: min = %u, max = %u, average = %u\n", bottomrow.minval, bottomrow.maxval, uint32_t(bottomrow.total / desc.dwWidth));
+    printf("  South Pole: min = %u, max = %u, average = %u\n", toprow.minval, toprow.maxval, uint32_t(toprow.total / desc.dwWidth));
+
+    set_row(data, desc.dwWidth, uint32_t(toprow.total / desc.dwWidth));
+    set_row(data + pitch * (desc.dwHeight - 1), desc.dwWidth, uint32_t(bottomrow.total / desc.dwWidth));
+
+	if (fopen_s(&fp, infilename, "rb+") != 0)
+	{
+		printf("Unable to write %s", infilename);
+		return 1;
+	}
+
+	fseek(fp, desc.dwSize + sizeof(uint32_t), SEEK_SET);
+	fwrite(data, pitch, desc.dwHeight, fp);
+
+	fclose(fp);
+
+    return 0;
+}
+
 void usage(const BoolParams_t& boolParams, const IntParams_t& intParams, const FloatParams_t& floatParams, const StringParams_t& strParams)
 {
     printf("topoconv <infilename> [outfilename] [opts]\n");
@@ -182,6 +329,7 @@ int main(int argc, const char** argv)
         { "nearest", BoolParams_t::mapped_type("Use nearest resampling") },
         { "xflip", BoolParams_t::mapped_type("Flip output horizontally") },
         { "yflip", BoolParams_t::mapped_type("Flip output vertically") },
+        { "fixpoles", BoolParams_t::mapped_type("Fix polar discontinuities (DDS format input)") },
         });
 
     IntParams_t intParams({
@@ -252,6 +400,17 @@ int main(int argc, const char** argv)
             usage(boolParams, intParams, floatParams, strParams);
             return 1;
         }
+    }
+
+    if (boolParams["fixpoles"])
+    {
+        if (infilename)
+        {
+            return FixPoles(infilename);
+        }
+
+        printf("Missing input texture\n");
+        return 1;
     }
 
     TiffFile_t landTex = {};
@@ -692,7 +851,7 @@ int main(int argc, const char** argv)
             return 1;
         }
 
-        uint32_t magic = 0x20534444;
+        uint32_t magic = DDSMagic;
         fwrite(&magic, 4, 1, fp);
         fwrite(&desc, sizeof(desc), 1, fp);
         fwrite(dstdata, desc.dwPitchOrLinearSize, dst_height, fp);
@@ -749,7 +908,7 @@ int main(int argc, const char** argv)
             return 1;
         }
 
-        uint32_t magic = 0x20534444;
+        uint32_t magic = DDSMagic;
         fwrite(&magic, 4, 1, fp);
         fwrite(&desc, sizeof(desc), 1, fp);
         fwrite(dstdata1, desc.dwPitchOrLinearSize, dst_height, fp);

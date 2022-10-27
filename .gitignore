@@ -15,4 +15,4 @@ tools/TopoConv/x64
 *.iobj
 *.ipdb
 *.pdb
-Release
+/Release
