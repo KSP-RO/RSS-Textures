@@ -671,12 +671,13 @@ int main(int argc, const char** argv)
 
             int32_t minLat = int32_t(y * latScale + 0.5);
             int32_t maxLat = int32_t((y + 1) * latScale + 0.5);
-            maxLat = min(maxLat, src_height);
+            maxLat = min(max(maxLat, minLat+1), src_height);
 
             for (int32_t x = 0; x < dst_width; ++x)
             {
                 int32_t minLong = int32_t((x + deltameridian) * lngScale + 0.5);
                 int32_t maxLong = int32_t((x + deltameridian + 1) * lngScale + 0.5);
+                maxLong = max(maxLong, minLong + 1);
 
                 int32_t n = 0;
 
